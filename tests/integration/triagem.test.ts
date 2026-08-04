@@ -1,0 +1,12 @@
+import { validarAprovacaoDemanda, podeAprovarDemanda } from "../../src/domain/triagem.ts";
+let p = 0, f = 0; const A = (c: boolean, m: string) => c ? (p++, console.log("  ✓", m)) : (f++, console.log("  ✗", m));
+const base = { briefingInterno: "Consolidado", tipo: "digital", area: "Redes", prazo: "2026-08-30T14:00", prioridade: "media", responsavelId: "u1" };
+A(podeAprovarDemanda(base), "aprova com todos os campos");
+A(!podeAprovarDemanda({ ...base, briefingInterno: "" }), "bloqueia sem briefing interno");
+A(!podeAprovarDemanda({ ...base, tipo: "" }), "bloqueia sem tipo");
+A(!podeAprovarDemanda({ ...base, area: "" }), "bloqueia sem área/fluxo");
+A(!podeAprovarDemanda({ ...base, prazo: "" }), "bloqueia sem prazo");
+A(!podeAprovarDemanda({ ...base, prioridade: "" }), "bloqueia sem prioridade");
+A(!podeAprovarDemanda({ ...base, responsavelId: "" }), "bloqueia sem responsável (e sem aguardando distribuição)");
+A(podeAprovarDemanda({ ...base, responsavelId: "", aguardandoDistribuicao: true }), "permite deixar aguardando distribuição explicitamente");
+console.log(`Triagem: ${p} ok, ${f} falhas`); if (f) process.exit(1);

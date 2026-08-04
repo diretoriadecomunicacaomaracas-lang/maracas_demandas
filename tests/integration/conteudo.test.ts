@@ -1,0 +1,11 @@
+import { camposDe, CONTEUDO_POR_TIPO, CAMPOS_GERENCIAIS, CAMPOS_OPERACIONAIS } from "../../src/domain/conteudo.ts";
+let p = 0, f = 0; const A = (c: boolean, m: string) => c ? (p++, console.log("  ✓", m)) : (f++, console.log("  ✗", m));
+A(camposDe("digital").some((c) => c.chave === "texto_card"), "digital tem 'texto do card'");
+A(camposDe("audiovisual").some((c) => c.chave === "roteiro" && c.tipo === "textoLongo"), "audiovisual tem 'roteiro'");
+A(camposDe("audiovisual").some((c) => c.chave === "data_gravacao" && c.tipo === "data"), "audiovisual tem data de gravação (data)");
+A(camposDe("impresso").some((c) => c.chave === "acabamento"), "impresso tem 'acabamento'");
+A(!camposDe("digital").some((c) => c.chave === "roteiro"), "digital NÃO mostra campos de audiovisual");
+A(CAMPOS_GERENCIAIS.includes("prioridade") && CAMPOS_GERENCIAIS.includes("prazo"), "prioridade/prazo são gerenciais");
+A(CAMPOS_OPERACIONAIS.includes("conteudo") && CAMPOS_OPERACIONAIS.includes("observacoes"), "conteudo/observacoes são operacionais");
+A(!CAMPOS_OPERACIONAIS.includes("prioridade" as any), "prioridade não é operacional");
+console.log(`Conteúdo: ${p} ok, ${f} falhas`); if (f) process.exit(1);

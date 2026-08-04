@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Inter empacotada localmente (public/fonts) — sem dependência de CDN. Ver docs/FONTES.md */
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url("/fonts/Inter-Variable.woff2") format("woff2");}
+
+:root{
+  --azul:#028EFF;--ciano:#0EC7FF;--verde:#4ED980;--amarelo:#FFC605;--laranja:#FF9E22;
+  --laranjaverm:#FF6729;--vermelho:#FF3B2B;
+  --bg:#F7F8FA;--surface:#FFFFFF;--surface2:#F2F4F7;--border:#E6E9EF;
+  --text:#1F2430;--text2:#5B6472;--text3:#98A1B0;--disabled:#EEF1F5;
+}
+html,body{padding:0;margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;line-height:1.45;}
+*{box-sizing:border-box}
+a{color:var(--azul);text-decoration:none}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px;border-radius:6px}
+/* Tons de status (pastel + texto escuro) — acessível, nunca só cor */
+.tone-azul{background:#E7F3FF;color:#0A5FB0}.tone-ciano{background:#E4F8FF;color:#0784A6}
+.tone-verde{background:#E6F8EE;color:#1B7F4B}.tone-amarelo{background:#FFF6DA;color:#8A6A00}
+.tone-laranja{background:#FFF0E0;color:#9A5A08}.tone-laranjaverm{background:#FFE9E1;color:#B23E17}
+.tone-vermelho{background:#FFE7E5;color:#B32219}.tone-neutro{background:#EEF1F5;color:#5B6472}
