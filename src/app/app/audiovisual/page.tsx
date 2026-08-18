@@ -1,24 +1,20 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { exigirInterno } from "@/components/interno/GuardInterno";
-import { createSupabaseServer } from "@/lib/supabase-server";
-import { StatusChip } from "@/components/ui/StatusChip";
-import Link from "next/link";
-export default async function Page() {
-  const ator = await exigirInterno();
-  const sb = createSupabaseServer();
-  const { data } = await sb.from("subdemandas").select("id,titulo,tipo,etapa").eq("situacao","ativa").eq("tipo","audiovisual");
+import { getAtor } from "@/server/context";
+import { listarSubdemandasComEquipe } from "@/server/data/demandas";
+import { PainelArea } from "@/components/interno/paineis/PainelArea";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
+export default async function AudiovisualPage() {
+  const ator = await getAtor(); if (!ator) redirect("/login");
+  if (ator.ambiente !== "interno") redirect("/");
+  const subs = await listarSubdemandasComEquipe();
   return (
     <AppShell atual="audiovisual" usuario={{ nome: ator.nome, cargo: ator.cargos[0] ?? "Interno" }}>
-      <h1 className="text-[22px] font-bold mb-4">Audiovisual</h1>
-      <div className="bg-white border border-neutro-border rounded-2xl overflow-hidden max-w-[760px]">
-        {(data ?? []).length === 0 && <div className="p-8 text-center text-neutro-text2">Nenhuma demanda deste tipo.</div>}
-        {(data ?? []).map((s: any) => (
-          <div key={s.id} className="flex items-center gap-3 p-4 border-b border-neutro-border">
-            <Link href={`/app/demandas/${s.id}`} className="flex-1 font-semibold hover:text-marca-azul">{s.titulo}</Link>
-            <StatusChip status={s.etapa} />
-          </div>
-        ))}
-      </div>
+      <div className="mb-4"><h1 className="text-[22px] font-bold">Audiovisual</h1>
+        <p className="text-neutro-text2 text-[13px]">Gravações, edição e publicação — carga por profissional.</p></div>
+      <PainelArea subs={subs as any} tipo="audiovisual" meId={ator.id} />
     </AppShell>
   );
 }

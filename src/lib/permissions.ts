@@ -44,6 +44,11 @@ export function permissoesDe(cargos: CargoChave[]): Set<PermissaoChave> {
 export function can(cargos: CargoChave[], p: PermissaoChave): boolean {
   return permissoesDe(cargos).has(p);
 }
+// Quem organiza o Planejamento / cria demanda interna (Diretor, Coordenador, Social Media, Admin).
+export const CARGOS_PLANEJAMENTO: CargoChave[] = ["diretor", "coordenador", "social_media", "administrador"];
+export function podePlanejar(cargos: CargoChave[]): boolean {
+  return cargos.some((c) => CARGOS_PLANEJAMENTO.includes(c));
+}
 // Regra crítica: impresso exige aprovação de coordenador E diretor na MESMA versão.
 export function podeLiberarImpressao(aprovacoesAtivas: { cargo: CargoChave }[]): boolean {
   const cargos = new Set(aprovacoesAtivas.map((a) => a.cargo));

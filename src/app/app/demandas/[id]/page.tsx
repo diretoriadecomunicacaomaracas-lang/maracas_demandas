@@ -25,6 +25,7 @@ export default async function DemandaDetalhe({ params }: { params: { id: string 
   const perms = {
     podeAprovarDigital: can(ator.cargos, "aprovar_digital"), podeAprovarImpresso: can(ator.cargos, "aprovar_impresso"),
     podeOperacional: can(ator.cargos, "editar_operacional"), podeDistribuir: can(ator.cargos, "editar_admin_demanda"),
+    podeExcluir: can(ator.cargos, "excluir_logico"),
     readonly: ator.cargos.length === 1 && ator.cargos[0] === "visualizador",
   };
   return (

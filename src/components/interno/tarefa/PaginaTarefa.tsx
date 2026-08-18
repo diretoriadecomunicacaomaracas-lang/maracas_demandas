@@ -12,6 +12,7 @@ import { ConteudoSection } from "./ConteudoSection";
 import { LinksSection } from "./LinksSection";
 import { ChecklistSection } from "./ChecklistSection";
 import { ComentariosSection } from "./ComentariosSection";
+import { ExcluirDemanda } from "@/components/interno/ExcluirDemanda";
 import { useDirtyGuard } from "./useDirty";
 
 const dt = (iso?: string | null) => iso ? new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—";
@@ -45,6 +46,8 @@ export function PaginaTarefa({ sub, versoes, aprovacoes, pedido, historico, link
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <BackButton fallback="/app/demandas" />
         <Breadcrumb trilha={[{ nome: "Demandas", href: "/app/demandas" }, { nome: sub.protocolo ? `Demanda ${sub.protocolo}` : sub.titulo }]} />
+        <div className="flex-1" />
+        <ExcluirDemanda subId={sub.id} pode={!!perms.podeExcluir} />
       </div>
 
       {/* Cabeçalho da tarefa */}

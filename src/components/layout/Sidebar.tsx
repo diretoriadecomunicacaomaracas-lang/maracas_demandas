@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const ITENS = [
-  ["painel","Painel","◱"],["solicitacoes","Solicitações","✉"],["demandas","Demandas","▤"],
+  ["painel","Painel","◱"],["solicitacoes","Solicitações","✉"],["planejamento","Planejamento","🗓"],["demandas","Demandas","▤"],
   ["criacao","Criação","✎"],["audiovisual","Audiovisual","▷"],["impressos","Impressos","🖶"],
   ["calendario","Calendário","▦"],["conversas","Conversas","💬"],["arquivadas","Arquivadas","🗀"],
-  ["admin","Administração","⚙"],
+  ["lixeira","Lixeira","🗑"],["admin","Administração","⚙"],
 ] as const;
 
 // Menu lateral: desktop fixo; mobile em drawer com overlay, foco e bloqueio de rolagem.

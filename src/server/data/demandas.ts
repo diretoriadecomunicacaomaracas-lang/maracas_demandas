@@ -59,6 +59,47 @@ export async function excluirLogico(subId: string, justificativa: string) {
   await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "excluida_logicamente", autor_id: ator.id, justificativa });
   revalidatePath("/app/demandas"); return { ok: true };
 }
+// Restaura uma subdemanda excluída logicamente (Lixeira).
+export async function restaurarSubdemanda(subId: string) {
+  const ator = await getAtor(); if (!ator || !can(ator.cargos, "excluir_logico")) return { ok: false, erro: "Restauração é de Admin/Diretor/Coordenador." };
+  const sb = createSupabaseServer();
+  await sb.from("subdemandas").update({ situacao: "ativa" }).eq("id", subId);
+  await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "restaurada", autor_id: ator.id });
+  revalidatePath("/app/demandas"); revalidatePath("/app/lixeira"); return { ok: true };
+}
+
+// Finalizadas / arquivadas (arquivo-histórico; fora do Kanban ativo).
+export async function listarFinalizadas() {
+  const sb = createSupabaseServer();
+  const { data } = await sb.from("subdemandas")
+    .select("id,titulo,tipo,etapa,situacao,prazo,secretaria_id,updated_at")
+    .or("etapa.eq.finalizado,situacao.eq.arquivada").neq("situacao", "excluida_logicamente").is("deleted_at", null)
+    .order("updated_at", { ascending: false }).limit(500);
+  const secIds = [...new Set((data ?? []).map((s: any) => s.secretaria_id).filter(Boolean))];
+  const { data: secs } = secIds.length ? await sb.from("secretarias").select("id,nome").in("id", secIds) : { data: [] };
+  const mSec = new Map((secs ?? []).map((s: any) => [s.id, s.nome] as [string, string]));
+  return (data ?? []).map((s: any) => ({ ...s, secretariaNome: mSec.get(s.secretaria_id) ?? null }));
+}
+
+// Lixeira: subdemandas excluídas logicamente + autor/motivo/data (auditoria).
+export async function listarLixeira() {
+  const sb = createSupabaseServer();
+  const { data } = await sb.from("subdemandas").select("id,titulo,tipo,secretaria_id").eq("situacao", "excluida_logicamente").limit(500);
+  const ids = (data ?? []).map((s: any) => s.id);
+  if (!ids.length) return [];
+  const [{ data: auds }, { data: users }] = await Promise.all([
+    sb.from("auditoria").select("entidade_id,autor_id,justificativa,created_at").eq("entidade", "subdemanda").eq("acao", "excluida_logicamente").in("entidade_id", ids).order("created_at", { ascending: false }),
+    sb.from("usuarios").select("id,nome"),
+  ]);
+  const mUser = new Map((users ?? []).map((u: any) => [u.id, u.nome] as [string, string]));
+  const mAud = new Map<string, any>();
+  for (const a of auds ?? []) if (!mAud.has(a.entidade_id)) mAud.set(a.entidade_id, a);
+  return (data ?? []).map((s: any) => {
+    const a = mAud.get(s.id);
+    return { ...s, excluidoPor: a ? mUser.get(a.autor_id) ?? "—" : "—", motivo: a?.justificativa ?? "—", quando: a?.created_at ?? null };
+  });
+}
+
 export async function reabrir(subId: string, etapaRetorno: string, justificativa: string) {
   const ator = await getAtor(); if (!ator || !can(ator.cargos, "reabrir_demanda")) return { ok: false, erro: "Reabertura é de Diretor/Coordenador." };
   if (!justificativa.trim()) return { ok: false, erro: "Justificativa obrigatória." };
