@@ -61,6 +61,7 @@ export async function liberarImpressao(versaoId: string) {
   if (pend.length) return { ok: false, erro: "Há pendências para liberar.", pendencias: pend };
   const sb = createSupabaseServer();
   const { data: v } = await sb.from("versoes").select("subdemanda_id").eq("id", versaoId).single();
+  if (!v) return { ok: false, erro: "Versão não encontrada." };
   await sb.from("liberacoes").insert({ versao_id: versaoId, tipo: "impressao", usuario_id: ator.id, cargo_chave: cargoAprovador(ator.cargos)!, ativa: true });
   await sb.from("versoes").update({ estado: "liberada_impressao" }).eq("id", versaoId);
   await sb.from("pedidos_impressao").update({ versao_liberada_id: versaoId, status: "aguardando_confirmacao" }).eq("subdemanda_id", v.subdemanda_id);
