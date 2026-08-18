@@ -29,3 +29,6 @@ test-results
 # Supabase (local)
 supabase/.branches
 supabase/.temp
+
+# TypeScript incremental build info (gerado)
+tsconfig.tsbuildinfo
