@@ -22,3 +22,71 @@ a{color:var(--azul);text-decoration:none}
 .tone-verde{background:#E6F8EE;color:#1B7F4B}.tone-amarelo{background:#FFF6DA;color:#8A6A00}
 .tone-laranja{background:#FFF0E0;color:#9A5A08}.tone-laranjaverm{background:#FFE9E1;color:#B23E17}
 .tone-vermelho{background:#FFE7E5;color:#B32219}.tone-neutro{background:#EEF1F5;color:#5B6472}
+
+/* =====================================================================
+   DESIGN SYSTEM — Rodada 1 (leve, delicado, harmonioso e reutilizável)
+   Regra de ouro: movimento só quando o usuário PERMITE (reduced-motion).
+   ===================================================================== */
+
+/* Respeita integralmente quem pediu menos movimento */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important;
+  }
+}
+
+/* ---- Superfícies e cartões ---- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.card-pad{padding:16px}
+.card-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.hoverable{transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease}
+.hoverable:hover{box-shadow:0 8px 24px rgba(16,24,40,.09);border-color:#dfe4ee}
+.pressable{transition:transform .09s ease}
+
+/* ---- Campos de formulário padronizados ---- */
+.inp{width:100%;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 12px;
+  background:var(--surface);color:var(--text);outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease}
+.inp:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(2,142,255,.12)}
+textarea.inp{height:auto;padding:10px 12px;line-height:1.5}
+
+/* ---- Marcação de termo pesquisado ---- */
+mark{background:#FFF1A8;color:inherit;border-radius:3px;padding:0 1px}
+
+/* ---- Skeleton loading ---- */
+.skeleton{position:relative;overflow:hidden;background:var(--surface2);border-radius:8px}
+.skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent)}
+
+/* ---- Animações (SOMENTE se o usuário não pediu movimento reduzido) ---- */
+@media (prefers-reduced-motion: no-preference){
+  @keyframes ds-fade-up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes ds-fade{from{opacity:0}to{opacity:1}}
+  @keyframes ds-pop{0%{transform:scale(.96)}100%{transform:scale(1)}}
+  @keyframes ds-expand{from{opacity:0;transform:scaleY(.98);transform-origin:top}to{opacity:1;transform:none}}
+  @keyframes ds-shimmer{100%{transform:translateX(100%)}}
+
+  .anim-page{animation:ds-fade-up .28s cubic-bezier(.2,.7,.2,1) both}
+  .anim-in{animation:ds-fade-up .30s cubic-bezier(.2,.7,.2,1) both}
+  .anim-fade{animation:ds-fade .20s ease both}
+  .anim-pop{animation:ds-pop .16s ease both}
+  .anim-expand{animation:ds-expand .18s ease both}
+
+  /* Entrada encadeada de listas/cards (efeito suave, sem exageros) */
+  .stagger>*{animation:ds-fade-up .32s cubic-bezier(.2,.7,.2,1) both}
+  .stagger>*:nth-child(1){animation-delay:.00s}
+  .stagger>*:nth-child(2){animation-delay:.03s}
+  .stagger>*:nth-child(3){animation-delay:.06s}
+  .stagger>*:nth-child(4){animation-delay:.09s}
+  .stagger>*:nth-child(5){animation-delay:.12s}
+  .stagger>*:nth-child(6){animation-delay:.15s}
+  .stagger>*:nth-child(7){animation-delay:.18s}
+  .stagger>*:nth-child(8){animation-delay:.21s}
+  .stagger>*:nth-child(n+9){animation-delay:.24s}
+
+  .hoverable:hover{transform:translateY(-1px)}
+  .pressable:active{transform:scale(.98)}
+  .skeleton::after{animation:ds-shimmer 1.4s infinite}
+}

@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 export function Button({ variant = "secondary", className = "", ...props }:
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  const base = "inline-flex items-center gap-2 h-10 px-4 rounded-md font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md font-semibold text-sm transition pressable disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none";
   const styles: Record<Variant,string> = {
     primary: "bg-marca-azul text-white hover:brightness-95",
     secondary: "bg-white border border-neutro-border text-neutro-text hover:bg-neutro-surface2",

@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getAtor } from "@/server/context";
 import { listarCentral } from "@/server/data/solicitacoes";
 import { TriagemBotoes } from "@/components/interno/TriagemBotoes";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -38,16 +39,16 @@ export default async function Central({ searchParams }: { searchParams: { aba?: 
         })}
       </div>
       {lista.length === 0 ? (
-        <div className="bg-white border border-neutro-border rounded-xl p-8 text-center text-neutro-text2">Nada nesta aba.</div>
+        <EmptyState icone="✉" titulo="Nada nesta aba" descricao="Não há solicitações neste estado no momento." />
       ) : (
-        <div className="bg-white border border-neutro-border rounded-2xl overflow-x-auto">
+        <div className="card overflow-x-auto anim-in">
           <table className="w-full text-[13px] min-w-[980px]">
             <thead><tr className="bg-neutro-surface2 text-left text-[11px] uppercase text-neutro-text2">
               <th className="p-3">Protocolo</th><th className="p-3">Título</th><th className="p-3">Secretaria</th><th className="p-3">Setor</th>
               <th className="p-3">Solicitante</th><th className="p-3">Chegada</th><th className="p-3">Prazo</th><th className="p-3">Status</th>
               <th className="p-3">{abaAtual.chave === "pendentes" ? "Aguardando" : "Decisão"}</th><th className="p-3">Ações</th></tr></thead>
             <tbody>{lista.map((s: any) => (
-              <tr key={s.id} className="border-t border-neutro-border align-top">
+              <tr key={s.id} className="border-t border-neutro-border align-top transition-colors hover:bg-neutro-surface2/60">
                 <td className="p-3"><span className="text-[11px] bg-neutro-surface2 border border-neutro-border rounded px-2 py-0.5">{s.protocolo}</span></td>
                 <td className="p-3 font-semibold"><Link href={`/app/solicitacoes/${s.id}`} className="hover:text-marca-azul">{s.titulo}</Link>{s.restrita && <span className="ml-1 text-[11px] text-[#B23E17]">restrita</span>}</td>
                 <td className="p-3">{s.secretaria}</td><td className="p-3">{s.setor}</td><td className="p-3">{s.solicitante}</td>
