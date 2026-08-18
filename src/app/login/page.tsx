@@ -10,11 +10,23 @@ export default function LoginPage() {
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault(); setErro(null); setCarregando(true);
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    setCarregando(false);
-    if (error) { setErro("E-mail ou senha inválidos."); return; }
-    window.location.href = "/"; // middleware redireciona ao ambiente do usuário
+    try {
+      const supabase = createSupabaseBrowser();
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      setCarregando(false);
+      if (error) {
+        console.error("[login] Supabase auth error:", error);
+        setErro(error.message === "Invalid login credentials"
+          ? "E-mail ou senha inválidos."
+          : `Não foi possível entrar: ${error.message}`);
+        return;
+      }
+      window.location.href = "/"; // middleware redireciona ao ambiente do usuário
+    } catch (err: any) {
+      setCarregando(false);
+      console.error("[login] Falha de rede/config:", err);
+      setErro(`Falha ao contatar o servidor de autenticação: ${err?.message ?? err}`);
+    }
   }
 
   return (

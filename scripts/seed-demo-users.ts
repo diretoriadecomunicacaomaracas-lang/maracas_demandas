@@ -4,9 +4,19 @@
  *   npx tsx scripts/seed-demo-users.ts
  * Senhas são apenas para HOMOLOGAÇÃO. Nunca use em produção.
  */
+import { loadEnvConfig } from "@next/env";
 import { createClient } from "@supabase/supabase-js";
 
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+// Carrega .env.local/.env do projeto (mesma lógica do Next) para rodar via `tsx`.
+loadEnvConfig(process.cwd());
+
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!URL || !KEY) {
+  console.error("Faltam variáveis: defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env.local.");
+  process.exit(1);
+}
+const admin = createClient(URL, KEY);
 const SENHA = "Homolog@2026"; // documentada em docs/CONTAS_HOMOLOGACAO.md
 
 const users = [
