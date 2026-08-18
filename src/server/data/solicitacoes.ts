@@ -35,13 +35,34 @@ export async function criarSolicitacao(form: FormData) {
   return { ok: true, protocolo: data?.protocolo };
 }
 
-export async function enviarMensagemSolic(solicId: string, conteudo: string) {
+export async function enviarMensagemSolic(solicId: string, conteudo: string, visibilidade: "publica" | "interna" = "publica") {
   const ator = await getAtor(); if (!ator) return { ok: false, erro: "Não autenticado." };
+  if (!conteudo.trim()) return { ok: false, erro: "Mensagem vazia." };
   const sb = createSupabaseServer();
-  const { error } = await sb.from("solicitacao_mensagens").insert({ solicitacao_id: solicId, autor_id: ator.id, origem: ator.ambiente, conteudo });
-  if (error) return { ok: false, erro: "Falha ao enviar." };
+  if (visibilidade === "interna") {
+    // Mensagem interna: só Coordenação/Direção (matriz) e requer a coluna do PATCH_0007.
+    if (!can(ator.cargos, "moderar_conversa")) return { ok: false, erro: "Apenas Coordenação/Direção enviam comentários internos." };
+    const { error } = await sb.from("solicitacao_mensagens").insert({ solicitacao_id: solicId, autor_id: ator.id, origem: ator.ambiente, conteudo, visibilidade: "interna" });
+    if (error) return { ok: false, erro: "Comentário interno requer o PATCH_0007 aplicado (coluna 'visibilidade')." };
+  } else {
+    // Pública: funciona no schema atual (sem a coluna) e no pós-patch (default 'publica').
+    const { error } = await sb.from("solicitacao_mensagens").insert({ solicitacao_id: solicId, autor_id: ator.id, origem: ator.ambiente, conteudo });
+    if (error) return { ok: false, erro: "Falha ao enviar." };
+  }
   revalidatePath(`/app/solicitacoes/${solicId}`); revalidatePath(`/portal/${solicId}`);
   return { ok: true };
+}
+
+// Registra o início da análise ao abrir a solicitação pelo botão "Analisar".
+export async function registrarInicioAnalise(solicId: string) {
+  const ator = await getAtor(); if (!ator || !can(ator.cargos, "triagem")) return;
+  const sb = createSupabaseServer();
+  const { data: s } = await sb.from("solicitacoes").select("status_externo").eq("id", solicId).maybeSingle();
+  if (s?.status_externo === "enviada") {
+    await sb.from("solicitacoes").update({ status_externo: "em_analise" }).eq("id", solicId);
+    await sb.from("auditoria").insert({ entidade: "solicitacao", entidade_id: solicId, acao: "triagem_iniciar_analise", autor_id: ator.id });
+    revalidatePath("/app/solicitacoes");
+  }
 }
 
 // Triagem (interno). aprovar → cria demanda + subdemanda.
