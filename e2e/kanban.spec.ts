@@ -5,5 +5,5 @@ test("kanban carrega colunas", async ({ page }) => {
   await login(page, "coord@maracas.ba.gov.br");
   await page.goto("/app/demandas/kanban");
   await expect(page.getByRole("list", { name: "Planejamento" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Em produção" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Em criação" })).toBeVisible();
 });

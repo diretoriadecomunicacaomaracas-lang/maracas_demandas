@@ -39,3 +39,8 @@ Login/logout, Busca Global, Painel, Kanban, detalhe da demanda, painéis Criaç�
 - Anexos nas solicitações (Storage privado + URL assinada) — Fase K/L.
 - Consolidação de macroetapas dos fluxos (Fase C) e modalidades múltiplas do audiovisual.
 - Drag&drop e visões semana/dia do calendário; Realtime nativo no chat.
+
+## Release
+- **v1.0.0-rc.1** — escopo congelado. Deploy: ver `docs/DEPLOY_V1.md`.
+- SQL antes do deploy (aditivo/idempotente, app degrada sem eles): PATCH_0007 → PATCH_0008.
+- Segurança revisada: service_role só server-side; `.env*` ignorados; sem localhost hardcoded; Admin protegido no servidor; sem logs sensíveis.

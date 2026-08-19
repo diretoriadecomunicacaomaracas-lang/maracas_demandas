@@ -1,6 +1,6 @@
 {
   "name": "maracas-demandas",
-  "version": "0.1.0",
+  "version": "1.0.0-rc.1",
   "private": true,
   "description": "Sistema de Gestão de Demandas — Comunicação da Prefeitura de Maracás/BA (MVP)",
   "scripts": {

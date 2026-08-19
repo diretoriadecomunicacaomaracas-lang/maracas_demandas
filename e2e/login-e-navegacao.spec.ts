@@ -4,7 +4,7 @@ import { login } from "./helpers";
 test("interno faz login e navega pelo menu", async ({ page }) => {
   await login(page, "coord@maracas.ba.gov.br");
   await expect(page).toHaveURL(/\/app\/painel/);
-  for (const item of ["Solicitações", "Demandas", "Calendário", "Conversas"]) {
+  for (const item of ["Solicitações", "Demandas", "Calendário", "Bate-papo"]) {
     await page.getByRole("navigation").getByText(item, { exact: true }).click();
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   }
