@@ -44,14 +44,14 @@ as $$ select extensions.unaccent('extensions.unaccent', $1) $$;
 -- ---------------------------------------------------------------------
 
 -- 2.a) Protocolo próprio da DEMANDA (inclusive internas sem solicitação).
---      Formato: 'D-2026-0001'. Sequência dedicada; backfill dos existentes.
+--      Formato: 'D-AAAA-0001' (ano dinâmico via now()). Sequência dedicada; backfill dos existentes.
 create sequence if not exists public.demanda_protocolo_seq;
 alter table public.demandas add column if not exists protocolo text;
 update public.demandas
-   set protocolo = 'D-2026-' || lpad(nextval('public.demanda_protocolo_seq')::text, 4, '0')
+   set protocolo = 'D-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.demanda_protocolo_seq')::text, 4, '0')
  where protocolo is null;
 alter table public.demandas
-  alter column protocolo set default ('D-2026-' || lpad(nextval('public.demanda_protocolo_seq')::text, 4, '0'));
+  alter column protocolo set default ('D-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.demanda_protocolo_seq')::text, 4, '0'));
 create unique index if not exists demandas_protocolo_key on public.demandas(protocolo);
 
 -- 2.b) Visibilidade das mensagens (publica | interna). Default preserva as
@@ -304,7 +304,7 @@ as $$
     and (p_de           is null or l.created_at >= p_de)
     and (p_ate          is null or l.created_at <= p_ate)
 
-  order by data desc nulls last
+  order by 6 desc nulls last   -- 6 = coluna "data" (ORDER BY por posição no UNION ALL)
   limit 300;
 $$;
 
