@@ -13,6 +13,7 @@ import { LinksSection } from "./LinksSection";
 import { ChecklistSection } from "./ChecklistSection";
 import { ComentariosSection } from "./ComentariosSection";
 import { ExcluirDemanda } from "@/components/interno/ExcluirDemanda";
+import { IniciarProducaoBtn } from "@/components/interno/IniciarProducaoBtn";
 import { useDirtyGuard } from "./useDirty";
 
 const dt = (iso?: string | null) => iso ? new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—";
@@ -47,6 +48,7 @@ export function PaginaTarefa({ sub, versoes, aprovacoes, pedido, historico, link
         <BackButton fallback="/app/demandas" />
         <Breadcrumb trilha={[{ nome: "Demandas", href: "/app/demandas" }, { nome: sub.protocolo ? `Demanda ${sub.protocolo}` : sub.titulo }]} />
         <div className="flex-1" />
+        <IniciarProducaoBtn subId={sub.id} etapa={sub.etapa} tipo={sub.tipo} temResponsavel={!!sub.responsavel} />
         <ExcluirDemanda subId={sub.id} pode={!!perms.podeExcluir} />
       </div>
 

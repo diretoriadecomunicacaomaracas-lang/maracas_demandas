@@ -1,22 +1,21 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { exigirInterno } from "@/components/interno/GuardInterno";
-import { createSupabaseServer } from "@/lib/supabase-server";
-export default async function Conversas() {
-  const ator = await exigirInterno();
-  const sb = createSupabaseServer();
-  const { data: grupos } = await sb.from("grupos_conversa").select("id,nome").order("nome"); // RLS: só membros
+import { getAtor } from "@/server/context";
+import { listarGrupos, garantirGruposIniciais } from "@/server/data/chat";
+import { ChatUI } from "@/components/interno/ChatUI";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
+export default async function Conversas({ searchParams }: { searchParams: { grupo?: string } }) {
+  const ator = await getAtor(); if (!ator) redirect("/login");
+  if (ator.ambiente !== "interno") redirect("/");
+  await garantirGruposIniciais(); // idempotente; só efetiva para Admin/Diretor
+  const grupos = await listarGrupos();
   return (
     <AppShell atual="conversas" usuario={{ nome: ator.nome, cargo: ator.cargos[0] ?? "Interno" }}>
-      <h1 className="text-[22px] font-bold mb-4">Conversas</h1>
-      <div className="flex gap-4">
-        <div className="w-64 bg-white border border-neutro-border rounded-xl overflow-hidden">
-          {(grupos ?? []).map((g: any) => <div key={g.id} className="flex items-center gap-2 p-3 border-b border-neutro-border"><span className="w-7 h-7 rounded-full bg-marca-azul text-white grid place-items-center">#</span><b className="text-[13.5px]">{g.nome}</b></div>)}
-          {(grupos ?? []).length === 0 && <div className="p-6 text-center text-neutro-text2 text-[13px]">Você ainda não participa de grupos.</div>}
-        </div>
-        <div className="flex-1 bg-white border border-neutro-border rounded-xl p-6 text-neutro-text2 text-[13px]">
-          Selecione um grupo para ver as mensagens. Envio, menções, não lidas e pesquisa já estão implementados na camada de serviços; a tela de mensagens em tempo real (Supabase Realtime) é o próximo incremento do wiring.
-        </div>
-      </div>
+      <div className="mb-4"><h1 className="text-[22px] font-bold">Bate-papo</h1>
+        <p className="text-neutro-text2 text-[13px]">Grupos internos da equipe · use @nome para mencionar.</p></div>
+      <ChatUI grupos0={grupos as any} meId={ator.id} grupoInicial={searchParams.grupo} />
     </AppShell>
   );
 }

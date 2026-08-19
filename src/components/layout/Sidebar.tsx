@@ -1,17 +1,19 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { meuAcesso } from "@/server/data/me";
 
 const ITENS = [
   ["painel","Painel","◱"],["solicitacoes","Solicitações","✉"],["planejamento","Planejamento","🗓"],["demandas","Demandas","▤"],
   ["criacao","Criação","✎"],["audiovisual","Audiovisual","▷"],["impressos","Impressos","🖶"],
-  ["calendario","Calendário","▦"],["conversas","Conversas","💬"],["arquivadas","Arquivadas","🗀"],
-  ["lixeira","Lixeira","🗑"],["admin","Administração","⚙"],
+  ["calendario","Calendário","▦"],["conversas","Bate-papo","💬"],["arquivadas","Arquivadas","🗀"],
 ] as const;
 
 // Menu lateral: desktop fixo; mobile em drawer com overlay, foco e bloqueio de rolagem.
 export function Sidebar({ atual, aberto, onFechar }:{ atual:string; aberto:boolean; onFechar:()=>void; }) {
+  const [podeAdmin, setPodeAdmin] = useState(false);
+  useEffect(() => { meuAcesso().then((a) => setPodeAdmin(a.podeAdmin)).catch(() => {}); }, []);
   useEffect(() => {
     if (aberto) {
       document.body.style.overflow = "hidden";
@@ -20,6 +22,18 @@ export function Sidebar({ atual, aberto, onFechar }:{ atual:string; aberto:boole
       return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onEsc); };
     }
   }, [aberto, onFechar]);
+
+  const Item = ([key, label, ic]: readonly [string, string, string]) => {
+    const ativo = atual === key;
+    return (
+      <a key={key} href={`/app/${key}`} onClick={onFechar} aria-current={ativo ? "page" : undefined}
+        className={`relative flex items-center gap-3 h-10 px-3 my-0.5 rounded-[10px] text-sm transition-colors pressable
+          ${ativo ? "bg-[#E7F3FF] text-marca-azul font-semibold" : "text-neutro-text2 hover:bg-neutro-surface2 hover:text-neutro-text"}`}>
+        {ativo && <span aria-hidden className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r bg-marca-azul" />}
+        <span aria-hidden className="w-5 text-center">{ic}</span>{label}
+      </a>
+    );
+  };
 
   return (
     <>
@@ -30,29 +44,21 @@ export function Sidebar({ atual, aberto, onFechar }:{ atual:string; aberto:boole
           md:static md:translate-x-0 ${aberto ? "translate-x-0" : ""}`}
         aria-label="Menu principal" role="navigation"
       >
-        {/* Logomarca = atalho para o Painel Principal (acessível por teclado, com tooltip) */}
         <div className="h-[60px] flex items-center px-4 border-b border-neutro-border">
-          <Link href="/app/painel" onClick={onFechar} title="Voltar ao Painel Principal"
-            aria-label="Voltar ao Painel Principal"
-            className="group inline-flex items-center rounded-[10px] px-1.5 py-1 -mx-1.5 cursor-pointer
-              hover:bg-neutro-surface2 transition pressable focus-visible:outline-2">
-            <Image src="/brand/logo-maracas.png" alt="Prefeitura de Maracás" width={150} height={40} priority
-              className="h-[26px] w-auto transition-transform group-hover:scale-[1.02]" />
+          <Link href="/app/painel" onClick={onFechar} title="Voltar ao Painel Principal" aria-label="Voltar ao Painel Principal"
+            className="group inline-flex items-center rounded-[10px] px-1.5 py-1 -mx-1.5 cursor-pointer hover:bg-neutro-surface2 transition pressable focus-visible:outline-2">
+            <Image src="/brand/logo-maracas.png" alt="Prefeitura de Maracás" width={150} height={40} priority className="h-[26px] w-auto transition-transform group-hover:scale-[1.02]" />
           </Link>
         </div>
-        <nav className="p-2 flex-1 overflow-auto">
+        <nav className="p-2 flex-1 overflow-auto flex flex-col">
           <div className="text-[11px] font-bold uppercase tracking-wide text-neutro-text3 px-3 pt-3 pb-1.5">Conteúdo</div>
-          {ITENS.map(([key,label,ic]) => {
-            const ativo = atual === key;
-            return (
-              <a key={key} href={`/app/${key}`} aria-current={ativo ? "page" : undefined}
-                className={`relative flex items-center gap-3 h-10 px-3 my-0.5 rounded-[10px] text-sm transition-colors pressable
-                  ${ativo ? "bg-[#E7F3FF] text-marca-azul font-semibold" : "text-neutro-text2 hover:bg-neutro-surface2 hover:text-neutro-text"}`}>
-                {ativo && <span aria-hidden className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r bg-marca-azul" />}
-                <span aria-hidden className="w-5 text-center">{ic}</span>{label}
-              </a>
-            );
-          })}
+          {ITENS.map(Item)}
+          {podeAdmin && (
+            <div className="mt-auto pt-2">
+              <div className="mx-3 my-1 border-t border-neutro-border" />
+              {Item(["admin", "Administração", "⚙"] as const)}
+            </div>
+          )}
         </nav>
       </aside>
     </>

@@ -6,6 +6,8 @@ import { UserMenu } from "@/components/interno/UserMenu";
 import { ToastProvider } from "@/components/ui/Toast";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { BuscaHeader } from "@/components/interno/BuscaHeader";
+import { ThemeToggle } from "@/components/interno/ThemeToggle";
+import { HelpDrawer } from "@/components/interno/HelpDrawer";
 
 // Estrutura do ambiente interno (barra superior + menu + conteúdo). Botão ☰ abre o drawer no mobile.
 export function AppShell({ atual, usuario, children }: {
@@ -21,8 +23,9 @@ export function AppShell({ atual, usuario, children }: {
             <button className="w-10 h-10 rounded-[10px] hover:bg-neutro-surface2 pressable md:hidden" aria-label="Abrir menu" onClick={() => setMenu(true)}>☰</button>
             <BuscaHeader />
             <div className="flex-1" />
+            <ThemeToggle />
+            <HelpDrawer />
             <NotifBell />
-            <button className="w-10 h-10 rounded-[10px] hover:bg-neutro-surface2 pressable" aria-label="Ajuda">?</button>
             <UserMenu />
           </header>
           <main className="flex-1 overflow-auto p-6">

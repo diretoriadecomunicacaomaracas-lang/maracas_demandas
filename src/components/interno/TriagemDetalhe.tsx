@@ -2,14 +2,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { salvarBriefingInterno, triagem, aprovarParaDemanda, enviarMensagemSolic } from "@/server/data/solicitacoes";
+import { salvarBriefingInterno, triagem, aprovarParaPlanejamento, enviarMensagemSolic } from "@/server/data/solicitacoes";
 import { BackButton, Breadcrumb } from "@/components/interno/BackButton";
 
 const ABAS = ["Resumo", "Demanda", "Briefing original", "Briefing interno", "Mensagens", "Histórico"] as const;
 const dt = (iso: string) => new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
-export function TriagemDetalhe({ s, internos, podeInterna, ambienteAtor }:
-  { s: any; internos: { id: string; nome: string; funcao: string; cargoChave: string | null }[]; podeInterna: boolean; ambienteAtor: string }) {
+export function TriagemDetalhe({ s, internos, podeInterna, podeAprovar, ambienteAtor }:
+  { s: any; internos: { id: string; nome: string; funcao: string; cargoChave: string | null }[]; podeInterna: boolean; podeAprovar: boolean; ambienteAtor: string }) {
   const router = useRouter();
   const [aba, setAba] = useState<typeof ABAS[number]>("Resumo");
   const [brief, setBrief] = useState<string>(s.briefing_interno ?? "");
@@ -29,9 +29,9 @@ export function TriagemDetalhe({ s, internos, podeInterna, ambienteAtor }:
   }
   function aprovar() {
     setPend([]); start(async () => {
-      const r = await aprovarParaDemanda(s.id, { ...dados, membros });
-      if (!r.ok) { setPend(r.pendencias ?? []); setMsg(r.erro ?? "Erro"); return; }
-      window.location.href = `/app/demandas/${r.demandaId}`;
+      const r = await aprovarParaPlanejamento(s.id, { tipo: dados.tipo, area: dados.area, prazo: dados.prazo || undefined, prioridade: dados.prioridade, membros });
+      if (!r.ok) { setMsg(r.erro ?? "Erro"); return; }
+      window.location.href = "/app/planejamento";
     });
   }
   function enviarMsg() {
@@ -53,6 +53,13 @@ export function TriagemDetalhe({ s, internos, podeInterna, ambienteAtor }:
       </div>
       <h1 className="text-[22px] font-bold">{s.titulo}</h1>
       <p className="text-neutro-text2 text-[13px] mb-3">Chegada {dt(s.created_at)} · Status: {s.status_externo}</p>
+
+      {!finalizada && podeAprovar && (
+        <div className="sticky top-0 z-30 -mx-6 px-6 py-2.5 mb-3 bg-white/90 backdrop-blur border-y border-neutro-border flex items-center gap-3 flex-wrap">
+          <span className="text-[13px] text-neutro-text2 flex-1 min-w-[180px]">Confira o briefing e os dados da aba <b>Demanda</b> e aprove para o planejamento.</span>
+          <Button variant="primary" disabled={pending} onClick={aprovar}>Aprovar para Planejamento</Button>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-neutro-border mb-4 overflow-x-auto" role="tablist">
         {ABAS.map((a) => (
@@ -145,7 +152,6 @@ export function TriagemDetalhe({ s, internos, podeInterna, ambienteAtor }:
         <div className="flex gap-2 flex-wrap mt-5 pt-4 border-t border-neutro-border">
           <Button disabled={pending} onClick={() => acaoSimples("iniciar_analise")}>Iniciar análise</Button>
           <Button disabled={pending} onClick={() => acaoSimples("pedir_info")}>Solicitar informações</Button>
-          <Button variant="primary" disabled={pending} onClick={aprovar}>Aprovar e transformar em demanda</Button>
           <Button variant="danger" disabled={pending} onClick={() => acaoSimples("recusar")}>Recusar</Button>
           <Button variant="danger" disabled={pending} onClick={() => acaoSimples("cancelar")}>Cancelar</Button>
         </div>

@@ -37,8 +37,10 @@ export function UserMenu() {
             <div><div className="text-[14px] font-semibold">{me.nome}</div><div className="text-[12px] text-neutro-text2">{me.email}</div><div className="text-[11px] text-neutro-text3">{me.funcao}</div></div>
           </div>
           <div className="p-1">
-            <div className="px-3 py-2 text-[12px] text-neutro-text2">Fuso: America/Sao_Paulo · Idioma: pt-BR</div>
-            <button role="menuitem" onClick={sair} className="w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-[#B32219] hover:bg-[#FFE7E5]">Sair da conta</button>
+            <a role="menuitem" href="/app/perfil" className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-neutro-text hover:bg-neutro-surface2"><span aria-hidden>👤</span> Perfil</a>
+            <a role="menuitem" href="/app/configuracoes" className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-neutro-text hover:bg-neutro-surface2"><span aria-hidden>⚙️</span> Configurações</a>
+            <div className="my-1 border-t border-neutro-border" />
+            <button role="menuitem" onClick={sair} className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold text-[#B32219] hover:bg-[#FFE7E5]"><span aria-hidden>↩</span> Sair da conta</button>
           </div>
         </div>
       )}

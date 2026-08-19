@@ -16,6 +16,13 @@ export async function getMe() {
   return { nome: ator.nome, email: ator.email, funcao, ambiente: ator.ambiente, avatarUrl: perfil?.avatar_url ?? null };
 }
 
+// Flags de navegação do usuário logado (visibilidade de menu; a segurança real é no servidor).
+export async function meuAcesso() {
+  const ator = await getAtor(); if (!ator) return { podeAdmin: false, ambiente: "solicitante" as const };
+  const { can } = await import("@/lib/permissions");
+  return { podeAdmin: can(ator.cargos, "administrar_usuarios"), ambiente: ator.ambiente };
+}
+
 export async function getNotificacoesTopo() {
   const sb = createSupabaseServer();
   const [{ data: itens }, { count }] = await Promise.all([

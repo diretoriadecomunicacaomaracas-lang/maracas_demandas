@@ -9,7 +9,8 @@ export default function Recuperar() {
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
     const supabase = createSupabaseBrowser();
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback` });
+    // Link seguro do Supabase → volta ao app e cai na tela de redefinição.
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback?next=/redefinir` });
     setEnviado(true);
   }
   return (
@@ -19,7 +20,7 @@ export default function Recuperar() {
         <h1 className="text-center text-lg font-semibold mb-1">Recuperar senha</h1>
         <p className="text-center text-neutro-text2 text-sm mb-5">Enviaremos um link seguro ao seu e-mail.</p>
         {enviado ? (
-          <div className="tone-verde rounded-[10px] px-3 py-2 text-sm" role="status">Se o e-mail existir, o link foi enviado.</div>
+          <div className="tone-verde rounded-[10px] px-3 py-2 text-sm" role="status">Se este e-mail estiver cadastrado, enviaremos as instruções de recuperação.</div>
         ) : (<>
           <div className="mb-3">
             <label htmlFor="e" className="block text-[13px] font-semibold mb-1.5">E-mail</label>

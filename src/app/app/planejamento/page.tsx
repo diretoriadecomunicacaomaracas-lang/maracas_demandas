@@ -45,7 +45,7 @@ export default async function PlanejamentoPage({ searchParams }: { searchParams:
         <div className="min-w-0 order-2 lg:order-1">
           <CalendarioMes eventos={eventos as any} ano={ano} mes={mes} basePath="/app/planejamento" />
         </div>
-        <div className="order-1 lg:order-2"><Backlog itens={backlog} podeEditar={podeEditar} /></div>
+        <div className="order-1 lg:order-2"><Backlog itens={backlog} podeEditar={podeEditar} internos={internosOpt} /></div>
       </div>
     </AppShell>
   );

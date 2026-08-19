@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { getAtor } from "@/server/context";
 import { listarCentral } from "@/server/data/solicitacoes";
-import { TriagemBotoes } from "@/components/interno/TriagemBotoes";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -62,11 +61,8 @@ export default async function Central({ searchParams }: { searchParams: { aba?: 
                 </td>
                 <td className="p-3">
                   {["enviada", "em_analise", "aguardando_informacoes"].includes(s.status_externo)
-                    ? <div className="flex items-center gap-2">
-                        <Link href={`/app/solicitacoes/${s.id}?analisar=1`}
-                          className="inline-flex items-center h-8 px-3 rounded-md bg-marca-azul text-white text-[13px] font-semibold pressable">Analisar</Link>
-                        <TriagemBotoes solicId={s.id} status={s.status_externo} />
-                      </div>
+                    ? <Link href={`/app/solicitacoes/${s.id}?analisar=1`}
+                        className="inline-flex items-center h-8 px-3 rounded-md bg-marca-azul text-white text-[13px] font-semibold pressable">Analisar</Link>
                     : s.demandaId ? <Link href={`/app/demandas/${s.demandaId}`} className="text-[13px] font-semibold">Abrir demanda →</Link> : <span className="text-neutro-text3 text-[12px]">Registro</span>}
                 </td>
               </tr>))}</tbody>

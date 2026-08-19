@@ -1,5 +1,6 @@
 "use server";
 import { createSupabaseServer } from "@/lib/supabase-server";
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAtor } from "@/server/context";
 import { respeita24h } from "@/domain/rules";
 import { can } from "@/lib/permissions";
@@ -29,9 +30,16 @@ export async function criarSolicitacao(form: FormData) {
     tipo: String(form.get("tipo") ?? "digital"), canal: String(form.get("canal") ?? ""),
     secretaria_id: ator.secretariaId, unidade_id: unidadeId, criado_por: ator.id,
     prazo_desejado: prazo || null, restrita: form.get("restrita") === "on",
-  }).select("protocolo").single();
+  }).select("id,protocolo").single();
   if (error) return { ok: false, erro: "Não foi possível enviar a solicitação." };
-  revalidatePath("/portal");
+  // Notifica a triagem (Coordenação/Direção/Social Media) sobre a nova solicitação.
+  try {
+    const admin = createSupabaseAdmin();
+    const { data: alvos } = await admin.from("usuario_cargos").select("usuario_id, cargos(chave)");
+    const ids = (alvos ?? []).filter((r: any) => ["coordenador", "diretor", "social_media"].includes(r.cargos?.chave)).map((r: any) => r.usuario_id);
+    if (ids.length && data?.id) await notificarUsuarios([...new Set(ids)] as string[], "nova_solicitacao", `Nova solicitação: ${String(form.get("titulo") ?? "")} (${data.protocolo})`, `/app/solicitacoes/${data.id}?analisar=1`);
+  } catch { /* notificação best-effort */ }
+  revalidatePath("/portal"); revalidatePath("/app/solicitacoes");
   return { ok: true, protocolo: data?.protocolo };
 }
 
@@ -134,6 +142,39 @@ export async function listarCentral() {
 // --- Ajuste: briefing duplo + aprovação estruturada ---
 import { validarAprovacaoDemanda } from "@/domain/triagem";
 import { notificarUsuarios } from "@/server/notify";
+import { podePlanejar } from "@/lib/permissions";
+
+// Aprovar para PLANEJAMENTO: idempotente, cria/vincula demanda no BACKLOG (etapa
+// planejamento) sem exigir responsável (definido depois, no Planejamento).
+export async function aprovarParaPlanejamento(solicId: string, dados: { tipo?: string; area?: string; prazo?: string; prioridade?: string; membros?: string[] }) {
+  const ator = await getAtor();
+  if (!ator || !podePlanejar(ator.cargos)) return { ok: false, erro: "Aprovação é de Social Media/Coordenação/Direção." };
+  const sb = createSupabaseServer();
+  const { data: s } = await sb.from("solicitacoes").select("*").eq("id", solicId).maybeSingle();
+  if (!s) return { ok: false, erro: "Solicitação não encontrada." };
+  // Idempotência: se já existe demanda para esta solicitação, não duplica.
+  const { data: existente } = await sb.from("demandas").select("id").eq("solicitacao_id", solicId).maybeSingle();
+  if (existente) {
+    if (s.status_externo !== "aprovada_planejamento") await sb.from("solicitacoes").update({ status_externo: "aprovada_planejamento" }).eq("id", solicId);
+    return { ok: true, jaExistia: true };
+  }
+  if (!(s.briefing_interno?.trim() || s.descricao?.trim())) return { ok: false, erro: "Defina o briefing interno antes de aprovar." };
+  const { data: dem } = await sb.from("demandas").insert({
+    titulo: s.titulo, solicitacao_id: s.id, prioridade: dados.prioridade ?? "media",
+    briefing_consolidado: s.briefing_interno ?? s.descricao, secretaria_id: s.secretaria_id, unidade_id: s.unidade_id,
+  }).select("id").single();
+  const { data: sub } = await sb.from("subdemandas").insert({
+    demanda_id: dem?.id, titulo: s.titulo, tipo: dados.tipo ?? s.tipo ?? "digital", area: dados.area ?? null,
+    prioridade: dados.prioridade ?? "media", prazo: dados.prazo || s.prazo_desejado || null, secretaria_id: s.secretaria_id,
+    etapa: "planejamento", macroetapa: "planejamento",
+  }).select("id").single();
+  for (const m of dados.membros ?? []) await sb.from("subdemanda_membros").insert({ subdemanda_id: sub?.id, usuario_id: m });
+  await sb.from("solicitacoes").update({ status_externo: "aprovada_planejamento" }).eq("id", solicId);
+  await sb.from("auditoria").insert({ entidade: "solicitacao", entidade_id: solicId, acao: "aprovada_convertida", autor_id: ator.id, valor_novo: { demandaId: dem?.id, destino: "planejamento" } });
+  if (s.criado_por !== ator.id) await notificarUsuarios([s.criado_por], "solic_aprovada", `Sua solicitação foi aprovada e entrou no planejamento (${s.protocolo})`, `/portal/${s.id}`);
+  revalidatePath("/app/solicitacoes"); revalidatePath("/app/planejamento"); revalidatePath("/app/demandas");
+  return { ok: true, subId: sub?.id };
+}
 
 export async function getSolicitacaoCompleta(id: string) {
   const sb = createSupabaseServer();

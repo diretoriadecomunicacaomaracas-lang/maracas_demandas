@@ -90,3 +90,40 @@ mark{background:#FFF1A8;color:inherit;border-radius:3px;padding:0 1px}
   .pressable:active{transform:scale(.98)}
   .skeleton::after{animation:ds-shimmer 1.4s infinite}
 }
+
+/* =====================================================================
+   TEMA ESCURO — tokens semânticos (navy elegante, não preto puro).
+   Dirigido por data-theme no <html> (script no layout evita flash).
+   ===================================================================== */
+:root[data-theme="dark"]{
+  --azul:#3AA0FF;--ciano:#0EC7FF;--verde:#4ED980;--amarelo:#FFC605;--laranja:#FF9E22;
+  --laranjaverm:#FF6729;--vermelho:#FF5A4D;
+  --bg:#0E1526;--surface:#151E32;--surface2:#1D2840;--border:#2A3650;
+  --text:#E6EAF2;--text2:#A9B4C7;--text3:#6E7B94;--disabled:#232F49;
+}
+/* Utilitários Tailwind com cor fixa → adaptados por token no tema escuro */
+:root[data-theme="dark"] .bg-white{background-color:var(--surface)!important}
+:root[data-theme="dark"] .bg-neutro-surface{background-color:var(--surface)!important}
+:root[data-theme="dark"] .bg-neutro-surface2{background-color:var(--surface2)!important}
+:root[data-theme="dark"] .bg-neutro-bg{background-color:var(--bg)!important}
+:root[data-theme="dark"] .border-neutro-border{border-color:var(--border)!important}
+:root[data-theme="dark"] .text-neutro-text{color:var(--text)!important}
+:root[data-theme="dark"] .text-neutro-text2{color:var(--text2)!important}
+:root[data-theme="dark"] .text-neutro-text3{color:var(--text3)!important}
+:root[data-theme="dark"] .bg-\[\#E7F3FF\]{background-color:rgba(58,160,255,.16)!important}
+:root[data-theme="dark"] .text-marca-azul{color:var(--azul)!important}
+:root[data-theme="dark"] .bg-black\/40{background-color:rgba(0,0,0,.6)!important}
+/* Tons de status no escuro (fundo translúcido + texto claro) */
+:root[data-theme="dark"]{--tone-a:rgba(2,142,255,.18);--tone-c:rgba(14,199,255,.16);
+  --tone-v:rgba(78,217,128,.16);--tone-am:rgba(255,198,5,.16);--tone-la:rgba(255,158,34,.16);
+  --tone-lv:rgba(255,103,41,.18);--tone-r:rgba(255,90,77,.18);--tone-n:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .tone-azul{background:var(--tone-a);color:#9CCBFF}
+:root[data-theme="dark"] .tone-ciano{background:var(--tone-c);color:#8FE6FF}
+:root[data-theme="dark"] .tone-verde{background:var(--tone-v);color:#8FE9B4}
+:root[data-theme="dark"] .tone-amarelo{background:var(--tone-am);color:#FFDD7A}
+:root[data-theme="dark"] .tone-laranja{background:var(--tone-la);color:#FFC58A}
+:root[data-theme="dark"] .tone-laranjaverm{background:var(--tone-lv);color:#FFB093}
+:root[data-theme="dark"] .tone-vermelho{background:var(--tone-r);color:#FFA8A0}
+:root[data-theme="dark"] .tone-neutro{background:var(--tone-n);color:var(--text2)}
+:root[data-theme="dark"] mark{background:#5A4A00;color:#FFE9A8}
+:root[data-theme="dark"] .skeleton::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}

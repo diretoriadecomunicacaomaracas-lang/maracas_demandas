@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 export type ItemBacklog = {
   id: string; titulo: string; tipo: string; etapa: string; prioridade: string;
   prazo: string | null; secretariaNome: string | null; setorNome: string | null;
-  responsavelNome: string | null; protocolo: string | null;
+  responsavelId: string | null; responsavelNome: string | null; protocolo: string | null;
 };
 
 // Backlog: subdemandas ativas em planejamento/distribuição ainda NÃO programadas
@@ -38,7 +38,7 @@ export async function backlogPlanejamento(): Promise<ItemBacklog[]> {
         id: s.id, titulo: s.titulo, tipo: s.tipo, etapa: s.etapa, prioridade: s.prioridade,
         prazo: s.prazo, secretariaNome: mSec.get(s.secretaria_id) ?? null,
         setorNome: mUni.get(dem?.unidade_id ?? sol?.unidade_id) ?? null,
-        responsavelNome: mUser.get(s.responsavel_id) ?? null, protocolo: sol?.protocolo ?? null,
+        responsavelId: s.responsavel_id ?? null, responsavelNome: mUser.get(s.responsavel_id) ?? null, protocolo: sol?.protocolo ?? null,
       };
     });
 }
@@ -50,17 +50,44 @@ export async function eventosPlanejamento(deISO: string, ateISO: string) {
   return data ?? [];
 }
 
-// Agenda um item do backlog: cria um evento no calendário (reutiliza eventos_calendario).
-export async function agendarItem(subId: string, inicioISO: string, duracaoMin: number, canal: string) {
+// Agenda um item do backlog: exige RESPONSÁVEL, cria o evento e move para
+// "Aguardando distribuição" (planejado + atribuído, ainda não iniciado).
+export async function agendarItem(subId: string, inicioISO: string, duracaoMin: number, canal: string, responsavelId?: string) {
   const ator = await getAtor(); if (!ator || !podePlanejar(ator.cargos)) return { ok: false, erro: "Sem permissão para planejar." };
   const sb = createSupabaseServer();
-  const { data: sub } = await sb.from("subdemandas").select("titulo,responsavel_id").eq("id", subId).maybeSingle();
+  const { data: sub } = await sb.from("subdemandas").select("titulo,responsavel_id,tipo").eq("id", subId).maybeSingle();
   if (!sub) return { ok: false, erro: "Tarefa não encontrada." };
-  const { error } = await sb.from("eventos_calendario").insert({ subdemanda_id: subId, titulo: sub.titulo, inicio: inicioISO, duracao_min: duracaoMin || null, canal: canal || null, status: "planejado" });
+  // Regra obrigatória: sem responsável não agenda.
+  let responsavel = sub.responsavel_id;
+  if (responsavelId) { await sb.from("subdemandas").update({ responsavel_id: responsavelId }).eq("id", subId); responsavel = responsavelId; }
+  if (!responsavel) return { ok: false, erro: "Defina o responsável antes de agendar.", precisaResponsavel: true };
+  const { error } = await sb.from("eventos_calendario").insert({ subdemanda_id: subId, titulo: sub.titulo, inicio: inicioISO, duracao_min: duracaoMin || null, canal: canal || sub.tipo || null, status: "planejado" });
   if (error) return { ok: false, erro: "Falha ao agendar." };
-  await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "agendado_planejamento", autor_id: ator.id, valor_novo: { inicio: inicioISO } });
-  if (sub.responsavel_id && sub.responsavel_id !== ator.id) await notificarUsuarios([sub.responsavel_id], "agendamento", `Tarefa agendada: ${sub.titulo}`, `/app/demandas/${subId}`);
-  revalidatePath("/app/planejamento"); revalidatePath("/app/calendario");
+  // Aguardando distribuição: digital/impresso usam a etapa 'distribuicao';
+  // audiovisual permanece em 'planejamento' (o fluxo não possui 'distribuicao').
+  const novaEtapa = sub.tipo === "audiovisual" ? "planejamento" : "distribuicao";
+  await sb.from("subdemandas").update({ etapa: novaEtapa, macroetapa: "planejamento" }).eq("id", subId);
+  await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "agendado_planejamento", autor_id: ator.id, valor_novo: { inicio: inicioISO, etapa: novaEtapa } });
+  if (responsavel && responsavel !== ator.id) await notificarUsuarios([responsavel], "agendamento", `Tarefa agendada e atribuída a você: ${sub.titulo}`, `/app/demandas/${subId}`);
+  revalidatePath("/app/planejamento"); revalidatePath("/app/calendario"); revalidatePath("/app/demandas");
+  return { ok: true };
+}
+
+// Iniciar produção (o responsável assume): Aguardando distribuição → primeira etapa.
+// digital/impresso → criacao ; audiovisual → roteiro.
+export async function iniciarProducao(subId: string) {
+  const ator = await getAtor(); if (!ator) return { ok: false, erro: "Não autenticado." };
+  const sb = createSupabaseServer();
+  const { data: sub } = await sb.from("subdemandas").select("tipo,etapa,responsavel_id").eq("id", subId).maybeSingle();
+  if (!sub) return { ok: false, erro: "Tarefa não encontrada." };
+  const { data: mem } = await sb.from("subdemanda_membros").select("usuario_id").eq("subdemanda_id", subId);
+  const participa = sub.responsavel_id === ator.id || (mem ?? []).some((m: any) => m.usuario_id === ator.id);
+  const podeAdmin = ["diretor", "coordenador", "administrador"].some((c) => ator.cargos.includes(c as any));
+  if (!participa && !podeAdmin) return { ok: false, erro: "Só o responsável/colaboradores podem iniciar." };
+  const destino = sub.tipo === "audiovisual" ? "roteiro" : "criacao";
+  await sb.from("subdemandas").update({ etapa: destino, macroetapa: sub.tipo === "audiovisual" ? "producao" : "producao" }).eq("id", subId);
+  await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "producao_iniciada", autor_id: ator.id, valor_novo: { etapa: destino } });
+  revalidatePath("/app/demandas"); revalidatePath(`/app/demandas/${subId}`);
   return { ok: true };
 }
 

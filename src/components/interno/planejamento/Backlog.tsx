@@ -9,7 +9,7 @@ import { agendarItem } from "@/server/data/planejamento";
 import { casa } from "@/domain/busca";
 import type { ItemBacklog } from "@/server/data/planejamento";
 
-export function Backlog({ itens, podeEditar }: { itens: ItemBacklog[]; podeEditar: boolean }) {
+export function Backlog({ itens, podeEditar, internos }: { itens: ItemBacklog[]; podeEditar: boolean; internos: { id: string; nome: string }[] }) {
   const [q, setQ] = useState(""); const [tipo, setTipo] = useState("");
   const [agendando, setAgendando] = useState<string | null>(null);
   const filtrados = useMemo(() => itens.filter((i) =>
@@ -43,7 +43,7 @@ export function Backlog({ itens, podeEditar }: { itens: ItemBacklog[]; podeEdita
               {i.prazo && <span>⏱ {new Date(i.prazo).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span>}
             </div>
             {podeEditar && (agendando === i.id
-              ? <FormAgendar subId={i.id} tipo={i.tipo} onDone={() => setAgendando(null)} />
+              ? <FormAgendar subId={i.id} tipo={i.tipo} temResponsavel={!!i.responsavelId} internos={internos} onDone={() => setAgendando(null)} />
               : <button onClick={() => setAgendando(i.id)} className="mt-2 text-[13px] font-semibold text-marca-azul pressable">📅 Agendar</button>)}
           </div>
         ))}
@@ -52,18 +52,24 @@ export function Backlog({ itens, podeEditar }: { itens: ItemBacklog[]; podeEdita
   );
 }
 
-function FormAgendar({ subId, tipo, onDone }: { subId: string; tipo: string; onDone: () => void }) {
-  const [dt, setDt] = useState(""); const [dur, setDur] = useState("60");
+function FormAgendar({ subId, tipo, temResponsavel, internos, onDone }: { subId: string; tipo: string; temResponsavel: boolean; internos: { id: string; nome: string }[]; onDone: () => void }) {
+  const [dt, setDt] = useState(""); const [dur, setDur] = useState("60"); const [resp, setResp] = useState("");
   const [pending, start] = useTransition(); const router = useRouter(); const toast = useToast();
   function agendar() {
     if (!dt) { toast.erro("Escolha data e horário."); return; }
+    if (!temResponsavel && !resp) { toast.erro("Escolha o responsável pela demanda."); return; }
     start(async () => {
-      const r = await agendarItem(subId, new Date(dt).toISOString(), Number(dur) || 0, tipo);
-      if (r.ok) { toast.sucesso("Agendado no calendário."); onDone(); router.refresh(); } else toast.erro(r.erro ?? "Erro.");
+      const r = await agendarItem(subId, new Date(dt).toISOString(), Number(dur) || 0, tipo, resp || undefined);
+      if (r.ok) { toast.sucesso("Agendado · Aguardando distribuição."); onDone(); router.refresh(); } else toast.erro(r.erro ?? "Erro.");
     });
   }
   return (
     <div className="mt-2 flex flex-wrap items-end gap-2 anim-expand">
+      {!temResponsavel && (
+        <label className="flex flex-col text-[11px] text-neutro-text3 w-full">Escolha o responsável pela demanda*
+          <select className="inp h-9" value={resp} onChange={(e) => setResp(e.target.value)}><option value="">— selecionar —</option>{internos.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}</select>
+        </label>
+      )}
       <label className="flex flex-col text-[11px] text-neutro-text3">Data/horário<input type="datetime-local" className="inp h-9" value={dt} onChange={(e) => setDt(e.target.value)} /></label>
       <label className="flex flex-col text-[11px] text-neutro-text3">Duração (min)<input type="number" className="inp h-9 w-[90px]" value={dur} onChange={(e) => setDur(e.target.value)} /></label>
       <Button variant="primary" disabled={pending} onClick={agendar}>Agendar</Button>

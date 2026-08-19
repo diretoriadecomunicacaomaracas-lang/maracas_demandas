@@ -55,7 +55,7 @@ export async function arquivar(subId: string) {
 export async function excluirLogico(subId: string, justificativa: string) {
   const ator = await getAtor(); if (!ator || !can(ator.cargos, "excluir_logico")) return { ok: false, erro: "Exclusão lógica é de Admin/Diretor/Coordenador." };
   if (!justificativa.trim()) return { ok: false, erro: "Justificativa obrigatória." };
-  const sb = createSupabaseServer(); await sb.from("subdemandas").update({ situacao: "excluida_logicamente" }).eq("id", subId);
+  const sb = createSupabaseServer(); await sb.from("subdemandas").update({ situacao: "excluida_logicamente", deleted_at: new Date().toISOString() }).eq("id", subId);
   await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "excluida_logicamente", autor_id: ator.id, justificativa });
   revalidatePath("/app/demandas"); return { ok: true };
 }
@@ -63,7 +63,7 @@ export async function excluirLogico(subId: string, justificativa: string) {
 export async function restaurarSubdemanda(subId: string) {
   const ator = await getAtor(); if (!ator || !can(ator.cargos, "excluir_logico")) return { ok: false, erro: "Restauração é de Admin/Diretor/Coordenador." };
   const sb = createSupabaseServer();
-  await sb.from("subdemandas").update({ situacao: "ativa" }).eq("id", subId);
+  await sb.from("subdemandas").update({ situacao: "ativa", deleted_at: null }).eq("id", subId);
   await sb.from("auditoria").insert({ entidade: "subdemanda", entidade_id: subId, acao: "restaurada", autor_id: ator.id });
   revalidatePath("/app/demandas"); revalidatePath("/app/lixeira"); return { ok: true };
 }
@@ -84,7 +84,7 @@ export async function listarFinalizadas() {
 // Lixeira: subdemandas excluídas logicamente + autor/motivo/data (auditoria).
 export async function listarLixeira() {
   const sb = createSupabaseServer();
-  const { data } = await sb.from("subdemandas").select("id,titulo,tipo,secretaria_id").eq("situacao", "excluida_logicamente").limit(500);
+  const { data } = await sb.from("subdemandas").select("id,titulo,tipo,secretaria_id,deleted_at").eq("situacao", "excluida_logicamente").limit(500);
   const ids = (data ?? []).map((s: any) => s.id);
   if (!ids.length) return [];
   const [{ data: auds }, { data: users }] = await Promise.all([

@@ -1,32 +1,37 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { exigirInterno } from "@/components/interno/GuardInterno";
-import { createSupabaseServer } from "@/lib/supabase-server";
-import { todasUnidades } from "@/server/data/unidades";
-import { AdminSetores } from "@/components/interno/AdminSetores";
+import { getAtor } from "@/server/context";
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { can } from "@/lib/permissions";
+import { AdminPanel } from "@/components/interno/AdminPanel";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
 export default async function Admin() {
-  const ator = await exigirInterno("administrar_usuarios"); // bloqueia acesso indevido, inclusive por URL
-  const sb = createSupabaseServer();
-  const [{ data: usuarios }, { data: convites }, { data: secretarias }, { data: graficas }] = await Promise.all([
-    sb.from("usuarios").select("nome,email,situacao,ambiente_principal").is("deleted_at", null).limit(50),
-    sb.from("convites").select("nome,email,expira_em,usado_em").is("usado_em", null).limit(50),
-    sb.from("secretarias").select("nome").is("deleted_at", null),
-    sb.from("graficas").select("nome,ativa").is("deleted_at", null),
+  const ator = await getAtor(); if (!ator) redirect("/login");
+  // Segurança de rota (além do menu): só quem administra usuários entra.
+  if (!can(ator.cargos, "administrar_usuarios")) redirect("/app/painel");
+
+  const admin = createSupabaseAdmin();
+  const [{ data: usuarios }, { data: secretarias }, { data: unidades }, { data: graficas }, { data: grupos }, { data: membros }, { data: cargos }] = await Promise.all([
+    admin.from("usuarios").select("id,nome,email,situacao,ambiente_principal,secretaria_id,unidade_id").is("deleted_at", null).order("nome"),
+    admin.from("secretarias").select("id,nome,deleted_at").order("nome"),
+    admin.from("unidades").select("id,nome,secretaria_id,deleted_at").order("nome"),
+    admin.from("graficas").select("id,nome,contato_email,ativa").order("nome"),
+    admin.from("grupos_conversa").select("id,nome,descricao,arquivado").order("nome"),
+    admin.from("grupo_membros").select("grupo_id,usuario_id"),
+    admin.from("cargos").select("chave,nome").order("nome"),
   ]);
-  const { data: secList } = await sb.from("secretarias").select("id,nome").is("deleted_at", null).order("nome");
-  const unidades = await todasUnidades();
+  const mSec = new Map((secretarias ?? []).map((s: any) => [s.id, s.nome] as [string, string]));
+  const unidadesEnr = (unidades ?? []).map((u: any) => ({ ...u, secretariaNome: mSec.get(u.secretaria_id) ?? "—" }));
+  const gruposEnr = (grupos ?? []).map((g: any) => { const ms = (membros ?? []).filter((m: any) => m.grupo_id === g.id).map((m: any) => m.usuario_id); return { ...g, nMembros: ms.length, membros: ms }; });
+  const internos = (usuarios ?? []).filter((u: any) => u.ambiente_principal === "interno").map((u: any) => ({ id: u.id, nome: u.nome }));
+
   return (
     <AppShell atual="admin" usuario={{ nome: ator.nome, cargo: ator.cargos[0] ?? "Interno" }}>
-      <h1 className="text-[22px] font-bold mb-4">Administração</h1>
-      <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))" }}>
-        <Bloco titulo={`Usuários (${(usuarios ?? []).length})`}>{(usuarios ?? []).map((u: any, i: number) => <li key={i} className="py-1.5 border-b border-dashed border-neutro-border text-[13px]">{u.nome} — <span className="text-neutro-text2">{u.email} · {u.situacao}</span></li>)}</Bloco>
-        <Bloco titulo={`Convites pendentes (${(convites ?? []).length})`}>{(convites ?? []).map((c: any, i: number) => <li key={i} className="py-1.5 border-b border-dashed border-neutro-border text-[13px]">{c.nome} — <span className="text-neutro-text2">{c.email}</span></li>)}{(convites ?? []).length === 0 && <li className="text-neutro-text2 text-[13px]">Nenhum.</li>}</Bloco>
-        <Bloco titulo={`Secretarias (${(secretarias ?? []).length})`}>{(secretarias ?? []).map((s: any, i: number) => <li key={i} className="py-1.5 border-b border-dashed border-neutro-border text-[13px]">{s.nome}</li>)}</Bloco>
-        <Bloco titulo={`Gráficas (${(graficas ?? []).length})`}>{(graficas ?? []).map((g: any, i: number) => <li key={i} className="py-1.5 border-b border-dashed border-neutro-border text-[13px]">{g.nome} {g.ativa ? "" : "(inativa)"}</li>)}</Bloco>
-      </div>
-      <div className="mt-4 max-w-[560px]"><AdminSetores secretarias={(secList ?? []) as any} unidades={unidades as any} /></div>
+      <div className="mb-4"><h1 className="text-[22px] font-bold">Administração</h1>
+        <p className="text-neutro-text2 text-[13px]">Equipe, secretarias, setores, gráficas e grupos. Ações ficam registradas em auditoria.</p></div>
+      <AdminPanel usuarios={usuarios ?? []} secretarias={secretarias ?? []} unidades={unidadesEnr} graficas={graficas ?? []} grupos={gruposEnr} internos={internos} cargos={cargos ?? []} />
     </AppShell>
   );
-}
-function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return <div className="bg-white border border-neutro-border rounded-xl p-4"><b>{titulo}</b><ul className="mt-2 list-none p-0">{children}</ul></div>;
 }

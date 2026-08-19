@@ -3,7 +3,7 @@ import { getAtor } from "@/server/context";
 import { getSolicitacaoCompleta, registrarInicioAnalise } from "@/server/data/solicitacoes";
 import { listarInternos } from "@/server/data/usuarios";
 import { TriagemDetalhe } from "@/components/interno/TriagemDetalhe";
-import { can } from "@/lib/permissions";
+import { can, podePlanejar } from "@/lib/permissions";
 import { redirect, notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function TriagemPage({ params, searchParams }: { params: { 
   return (
     <AppShell atual="solicitacoes" usuario={{ nome: ator.nome, cargo: ator.cargos[0] ?? "Interno" }}>
       <TriagemDetalhe s={s as any} internos={internos as any}
-        podeInterna={can(ator.cargos, "moderar_conversa")} ambienteAtor={ator.ambiente} />
+        podeInterna={can(ator.cargos, "moderar_conversa")} podeAprovar={podePlanejar(ator.cargos)} ambienteAtor={ator.ambiente} />
     </AppShell>
   );
 }
