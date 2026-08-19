@@ -19,7 +19,7 @@ export function AppShell({ atual, usuario, children }: {
       <div className="flex h-screen">
         <Sidebar atual={atual} aberto={menu} onFechar={() => setMenu(false)} />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-[60px] bg-white/95 backdrop-blur border-b border-neutro-border flex items-center gap-3 px-4 flex-none z-20">
+          <header className="app-header h-[60px] backdrop-blur flex items-center gap-3 px-4 flex-none z-20">
             <button className="w-10 h-10 rounded-[10px] hover:bg-neutro-surface2 pressable md:hidden" aria-label="Abrir menu" onClick={() => setMenu(true)}>☰</button>
             <BuscaHeader />
             <div className="flex-1" />

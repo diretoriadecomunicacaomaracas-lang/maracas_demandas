@@ -43,7 +43,7 @@ export function BuscaHeader() {
     <div ref={wrapRef} className="relative flex-1 max-w-[520px]">
       <form role="search" onSubmit={(e) => { e.preventDefault(); irPara(q); }}
         className="h-10 bg-neutro-surface2 border border-neutro-border rounded-[10px] flex items-center gap-2 px-3 text-neutro-text3
-          transition focus-within:border-marca-azul focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(2,142,255,.12)]">
+          transition focus-within:border-marca-azul focus-within:bg-neutro-surface focus-within:shadow-[0_0_0_3px_rgba(2,142,255,.12)]">
         <span aria-hidden>🔎</span>
         <label className="sr-only" htmlFor="busca">Pesquisar no sistema</label>
         <input id="busca" ref={ref} value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setAberto(true)}

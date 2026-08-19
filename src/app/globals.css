@@ -127,3 +127,21 @@ mark{background:#FFF1A8;color:inherit;border-radius:3px;padding:0 1px}
 :root[data-theme="dark"] .tone-neutro{background:var(--tone-n);color:var(--text2)}
 :root[data-theme="dark"] mark{background:#5A4A00;color:#FFE9A8}
 :root[data-theme="dark"] .skeleton::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+
+/* =====================================================================
+   HEADER integrado ao tema + SIDEBAR retrátil (acabamento).
+   ===================================================================== */
+.app-header{background:var(--surface);border-bottom:1px solid var(--border)}
+:root[data-theme="dark"] .app-header{background:#1B2740} /* leve profundidade vs sidebar */
+
+.app-sidebar{width:16rem;transition:width .2s ease}
+.app-sidebar .nav-label{transition:opacity .15s ease}
+@media (min-width:768px){
+  :root[data-sidebar="collapsed"] .app-sidebar{width:72px}
+  :root[data-sidebar="collapsed"] .app-sidebar .nav-label,
+  :root[data-sidebar="collapsed"] .app-sidebar .app-logo,
+  :root[data-sidebar="collapsed"] .app-sidebar .sidebar-section-title{display:none}
+  :root[data-sidebar="collapsed"] .app-sidebar .nav-item{justify-content:center;padding-left:0;padding-right:0}
+  :root[data-sidebar="collapsed"] .app-sidebar .sidebar-head{justify-content:center;padding-left:0;padding-right:0}
+}
+@media (prefers-reduced-motion: reduce){ .app-sidebar{transition:none} }
