@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid place-items-center p-5">
       <form onSubmit={entrar} className="w-[420px] max-w-[96vw] bg-white border border-neutro-border rounded-2xl shadow-md p-8">
-        <Image src="/brand/logo-maracas.png" alt="Prefeitura de Maracás" width={200} height={52} priority className="h-[52px] w-auto mx-auto mb-5" />
+        <Image src="/brand/logo-maracas-cor.png" alt="Prefeitura de Maracás" width={1633} height={603} priority className="app-brand-img h-[56px] w-auto max-w-full object-contain mx-auto mb-5" />
         <h1 className="text-center text-lg font-semibold">Bem-vindo(a)</h1>
         <p className="text-center text-neutro-text2 text-sm mb-5">Gestão de Demandas · Comunicação</p>
         <div className="mb-3">
