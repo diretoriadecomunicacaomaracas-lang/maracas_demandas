@@ -47,8 +47,8 @@ export function Sidebar({ atual, aberto, onFechar }:{ atual:string; aberto:boole
         <div className="sidebar-head h-[60px] flex items-center gap-2 px-3 border-b border-neutro-border">
           <Link href="/app/painel" onClick={onFechar} title="Voltar ao Painel Principal" aria-label="Voltar ao Painel Principal"
             className="app-logo group flex-1 min-w-0 inline-flex items-center rounded-[10px] px-1.5 py-1 cursor-pointer hover:bg-neutro-surface2 transition pressable focus-visible:outline-2">
-            <Image src="/brand/logo-maracas-oficial.png" alt="Prefeitura de Maracás" width={1760} height={990} priority
-              className="h-[40px] w-auto max-w-full object-contain transition-transform group-hover:scale-[1.02]" />
+            <Image src="/brand/logo-maracas-cor.png" alt="Prefeitura de Maracás" width={1633} height={603} priority
+              className="app-brand-img h-[40px] w-auto max-w-full object-contain transition-transform group-hover:scale-[1.02]" />
           </Link>
           <SidebarToggle />
         </div>

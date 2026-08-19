@@ -145,3 +145,7 @@ mark{background:#FFF1A8;color:inherit;border-radius:3px;padding:0 1px}
   :root[data-sidebar="collapsed"] .app-sidebar .sidebar-head{justify-content:center;padding-left:0;padding-right:0}
 }
 @media (prefers-reduced-motion: reduce){ .app-sidebar{transition:none} }
+
+/* Marca: colorida no claro; branca no escuro (mesma arte, filtro no PNG transparente) */
+.app-brand-img{transition:filter .2s ease}
+:root[data-theme="dark"] .app-brand-img{filter:brightness(0) invert(1)}
