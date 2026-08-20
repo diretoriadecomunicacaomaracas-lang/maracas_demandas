@@ -44,3 +44,10 @@ Login/logout, Busca Global, Painel, Kanban, detalhe da demanda, painéis Criaç�
 - **v1.0.0-rc.1** — escopo congelado. Deploy: ver `docs/DEPLOY_V1.md`.
 - SQL antes do deploy (aditivo/idempotente, app degrada sem eles): PATCH_0007 → PATCH_0008.
 - Segurança revisada: service_role só server-side; `.env*` ignorados; sem localhost hardcoded; Admin protegido no servidor; sem logs sensíveis.
+
+## Encerramento da sessão — v1.0.0-rc.4
+- **Versão:** v1.0.0-rc.4 · **Commit:** 6cfc947
+- **Domínio de produção:** https://comunicacaomaracas.com.br
+- **Infraestrutura configurada:** Vercel (deploy automático via push em `master`); Supabase integrado (PATCHES 0007 e 0008 aplicados em produção); Resend/SMTP do Auth funcionando.
+- **Estado de homologação (verificado em produção):** criação de usuários OK; convite → ativação (`/auth/confirm` → `/ativar` → define senha) → login OK; recuperação de senha OK; Administração (CRUD + exclusões/reenvio de convite) OK; favicon corrigido (`/favicon.ico` 200); build e testes verdes.
+- **Orientação para a PRÓXIMA sessão:** exclusiva para **bugs, correções e melhorias** levantadas pelos usuários durante a homologação real. Não iniciar novos módulos sem novo escopo aprovado. Base de retomada: este documento + `docs/DEPLOY_V1.md` + tags `v1.0.0-rc.*`.
