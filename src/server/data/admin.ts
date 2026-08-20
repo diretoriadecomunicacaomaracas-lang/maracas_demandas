@@ -104,7 +104,8 @@ export async function criarUsuario(p: { nome: string; email: string; ambiente: "
   if (!p.nome.trim() || !p.email.trim()) return { ok: false, erro: "Nome e e-mail são obrigatórios." };
   const admin = createSupabaseAdmin();
   const site = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const { data: inv, error: e1 } = await admin.auth.admin.inviteUserByEmail(p.email.trim(), { redirectTo: `${site}/ativar` });
+  // Convite passa pelo callback (troca code por sessão) e cai em /ativar para definir a senha.
+  const { data: inv, error: e1 } = await admin.auth.admin.inviteUserByEmail(p.email.trim(), { redirectTo: `${site}/auth/callback?next=/ativar` });
   if (e1 || !inv?.user) return { ok: false, erro: `Não foi possível convidar (verifique SMTP): ${e1?.message ?? ""}` };
   const uid = inv.user.id;
   await admin.from("usuarios").upsert({ id: uid, nome: p.nome.trim(), email: p.email.trim(), ambiente_principal: p.ambiente, secretaria_id: p.secretariaId ?? null, unidade_id: p.unidadeId ?? null, grafica_id: p.graficaId ?? null, situacao: "aguardando_ativacao" });
